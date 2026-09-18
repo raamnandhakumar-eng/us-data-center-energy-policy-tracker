@@ -30,3 +30,25 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Runtime smoke test
+        shell: bash
+        run: |
+          npm run start > /tmp/gridpolicy-next.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:3000 > /tmp/gridpolicy-home.html; then
+              break
+            fi
+            sleep 1
+          done
+
+          test -s /tmp/gridpolicy-home.html
+          grep -q "GridPolicy" /tmp/gridpolicy-home.html
+
+          curl -fsS             -X POST             -H "Content-Type: application/json"             -d '{"id":"florida-fpl-llcs"}'             http://127.0.0.1:3000/api/analyze > /tmp/gridpolicy-api.json
+
+          grep -q '"humanReviewRequired":true' /tmp/gridpolicy-api.json
+          grep -q '"claimBindings"' /tmp/gridpolicy-api.json
