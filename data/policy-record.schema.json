@@ -16,12 +16,14 @@
     "recommendedAction",
     "owner",
     "source",
+    "sourceConfidence",
     "lastReviewed"
   ],
   "properties": {
     "id": { "type": "string" },
     "title": { "type": "string" },
     "jurisdiction": { "type": "string" },
+    "region": { "type": "string" },
     "policyType": { "type": "string" },
     "status": { "type": "string" },
     "effectiveDate": { "type": "string" },
@@ -41,6 +43,16 @@
         "opex",
         "regulatoryUncertainty"
       ],
+      "properties": {
+        "powerAvailability": { "$ref": "#/$defs/exposureLevel" },
+        "utilityCost": { "$ref": "#/$defs/exposureLevel" },
+        "interconnectionTimeline": { "$ref": "#/$defs/exposureLevel" },
+        "siteSelection": { "$ref": "#/$defs/exposureLevel" },
+        "renewableRequirements": { "$ref": "#/$defs/exposureLevel" },
+        "capex": { "$ref": "#/$defs/exposureLevel" },
+        "opex": { "$ref": "#/$defs/exposureLevel" },
+        "regulatoryUncertainty": { "$ref": "#/$defs/exposureLevel" }
+      },
       "additionalProperties": false
     },
     "teams": { "type": "array", "items": { "type": "string" } },
@@ -63,5 +75,11 @@
       },
       "additionalProperties": false
     }
-  }
+  },
+  "$defs": {
+    "exposureLevel": {
+      "enum": ["Low", "Medium", "Elevated", "High", "Variable", "Constrained"]
+    }
+  },
+  "additionalProperties": false
 }
