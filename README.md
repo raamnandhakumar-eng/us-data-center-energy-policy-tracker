@@ -6,16 +6,16 @@ GridPolicy is an independent portfolio project that converts federal and state e
 
 It is designed around one operating question:
 
-> What changed, why does it matter to infrastructure development, which functions are exposed, and what should be reviewed next?
+> What changed, why does it matter to infrastructure development, which functions are affected, and what should be reviewed next?
 
-## MVP
+## Phase 2 MVP
 
-The first build includes:
+The current build includes:
 
-- 10 real policy and regulatory records.
+- 15 real federal and state policy / regulatory records.
+- 13 state-market comparison rows.
 - Federal, state, PUC/PSC, tariff, incentive, permitting, transmission, and interconnection coverage.
-- Eight-state market comparison.
-- Structured business-impact fields for:
+- Factual business-impact descriptions for:
   - power availability
   - utility cost
   - interconnection timeline
@@ -27,12 +27,13 @@ The first build includes:
 - Cross-functional routing across Energy, Site Selection, Construction, Finance, Sustainability, Legal, Public Policy, and Operations.
 - Action ownership using Monitor, Engage, Analyze, Escalate, or No action.
 - Primary-source evidence and last-reviewed dates.
+- Claim-level source binding.
+- Policy-version comparison.
 - Leadership memo generation.
+- Downloadable text memos.
 - Optional AI-assisted drafting with explicit source and human-review controls.
 
 ## Current source set
-
-The MVP tracks these primary-source cases:
 
 1. FERC Order No. 2023 generator interconnection reform.
 2. FERC Order Nos. 1920 / 1920-A / 1920-B transmission planning and cost allocation.
@@ -44,68 +45,76 @@ The MVP tracks these primary-source cases:
 8. Illinois data center incentive program intake change.
 9. Pennsylvania GRID requirements for data center development.
 10. Arizona APS Extra High Load Factor rate case.
+11. California CPUC interim PG&E Electric Rule 30.
+12. Washington UTC Docket UE-260162 on emerging large electric loads.
+13. Wisconsin We Energies Very Large Customer tariff.
+14. Michigan Consumers Energy data center / very-large-customer service terms.
+15. Florida Power & Light LLCS-1 / LLCS-2 tariffs.
 
-Every record links back to a primary government, regulator, legislature, or utility source.
+Every record links back to a primary government, regulator, legislature, or utility-regulatory source.
 
-## Exposure indicators
+## Comparative view
 
-The dashboard uses qualitative exposure indicators such as Low, Medium, Elevated, High, Variable, and Constrained.
+The dashboard intentionally does **not** rank jurisdictions or assign policy scores.
 
-These labels describe the **potential business relevance of the tracked policy record** to development variables. They do not rate the merits of a law, regulator, political actor, or jurisdiction.
+Instead, each market row describes the currently tracked source record using factual fields:
 
-Examples:
+- tracked development
+- current status
+- power signal
+- interconnection signal
+- tariff / cost signal
+- clean-energy signal
 
-- **High utility-cost exposure** means the record directly changes, or may materially change, large-load cost responsibility or tariff economics.
-- **Elevated interconnection exposure** means the record can affect study, queue, energization, or grid-development assumptions.
-- **Variable power availability** means availability is highly project-, utility-, or location-dependent under the tracked framework.
+This keeps the tool useful for infrastructure diligence without turning policy monitoring into a political rating system.
+
+## Policy version comparison
+
+The data model supports retained versions of proposals, tariffs, and decisions. Current examples include:
+
+- PG&E Electric Rule 30 proposal → CPUC interim approval.
+- FPL LLCS original filing → approved settlement terms.
+
+The UI shows changes side by side with the source for each version.
+
+## Claim-level citation binding
+
+Each material structured claim stores:
+
+```
+claim id
+claim text
+source label
+source URL
+```
+
+The application checks whether the claim points to the record's retained primary source or a retained primary source in its version history.
+
+This is a **source-binding check**, not an automated legal or factual determination. Human review remains required.
 
 ## AI policy analyst
 
-The optional AI analyst is deliberately constrained.
-
-It can:
+The optional AI analyst can:
 
 - draft a policy summary
 - restate dates and agencies from the record
 - draft a business-impact memo
 - identify affected functions
+- compare retained policy versions
 - surface missing evidence
 
 It must:
 
 - use only the supplied structured record and retained evidence
-- preserve the primary-source citation
+- preserve primary-source citations
 - avoid unsupported claims
 - remain neutral on policy merits
+- avoid policy or jurisdiction ranking
 - require human review before distribution
 
-Without an API key, GridPolicy uses a deterministic memo baseline, so the product remains fully usable.
+Without an API key, GridPolicy uses a deterministic memo baseline, so the product remains usable.
 
 See [docs/AI_POLICY_ANALYST.md](docs/AI_POLICY_ANALYST.md).
-
-## Data model
-
-The record schema includes:
-
-```
-jurisdiction
-policy type
-status
-effective / milestone date
-responsible agency
-infrastructure issue
-business exposure
-teams affected
-recommended action
-owner
-due date
-supporting evidence
-primary source
-source confidence
-last reviewed date
-```
-
-See [data/policy-record.schema.json](data/policy-record.schema.json).
 
 ## Run locally
 
@@ -126,14 +135,13 @@ npm run dev
 
 ## Near-term roadmap
 
-- Add 5 additional state / utility cases.
-- Add policy version history and redline comparison.
-- Add ingestion adapters for legislation, PUC dockets, tariffs, and FERC updates.
-- Add claim-level citation checking.
-- Add saved watchlists and owner due dates.
-- Add downloadable one-page executive briefs.
-- Add change alerts when a tracked source is updated.
-- Add a 6–8 page methodology and comparative policy brief.
+- Automated primary-source monitoring.
+- Source-document hashing and archived snapshots.
+- Full-text claim validation against cited passages.
+- Saved watchlists and persistent action owners / due dates.
+- Reviewer approvals and audit trail.
+- PDF executive brief export.
+- 6–8 page methodology and comparative policy brief.
 
 ## Stack
 
@@ -142,6 +150,7 @@ npm run dev
 - React
 - Optional OpenAI Responses API integration
 - Primary-source policy data
+- GitHub Actions CI
 
 ## Disclaimer
 

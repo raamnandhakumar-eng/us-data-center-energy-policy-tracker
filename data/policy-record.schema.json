@@ -6,18 +6,22 @@
     "id",
     "title",
     "jurisdiction",
+    "region",
     "policyType",
     "status",
     "agency",
+    "issueAreas",
     "summary",
     "whyItMatters",
-    "exposure",
+    "businessImpact",
     "teams",
     "recommendedAction",
     "owner",
     "source",
     "sourceConfidence",
-    "lastReviewed"
+    "lastReviewed",
+    "evidence",
+    "claims"
   ],
   "properties": {
     "id": { "type": "string" },
@@ -31,7 +35,7 @@
     "issueAreas": { "type": "array", "items": { "type": "string" } },
     "summary": { "type": "string" },
     "whyItMatters": { "type": "string" },
-    "exposure": {
+    "businessImpact": {
       "type": "object",
       "required": [
         "powerAvailability",
@@ -43,17 +47,7 @@
         "opex",
         "regulatoryUncertainty"
       ],
-      "properties": {
-        "powerAvailability": { "$ref": "#/$defs/exposureLevel" },
-        "utilityCost": { "$ref": "#/$defs/exposureLevel" },
-        "interconnectionTimeline": { "$ref": "#/$defs/exposureLevel" },
-        "siteSelection": { "$ref": "#/$defs/exposureLevel" },
-        "renewableRequirements": { "$ref": "#/$defs/exposureLevel" },
-        "capex": { "$ref": "#/$defs/exposureLevel" },
-        "opex": { "$ref": "#/$defs/exposureLevel" },
-        "regulatoryUncertainty": { "$ref": "#/$defs/exposureLevel" }
-      },
-      "additionalProperties": false
+      "additionalProperties": { "type": "string" }
     },
     "teams": { "type": "array", "items": { "type": "string" } },
     "recommendedAction": {
@@ -64,6 +58,42 @@
     "sourceConfidence": { "enum": ["High", "Medium"] },
     "lastReviewed": { "type": "string" },
     "evidence": { "type": "array", "items": { "type": "string" } },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "text", "sourceLabel", "sourceUrl"],
+        "properties": {
+          "id": { "type": "string" },
+          "text": { "type": "string" },
+          "sourceLabel": { "type": "string" },
+          "sourceUrl": { "type": "string", "format": "uri" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "versionHistory": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["label", "date", "source", "changes"],
+        "properties": {
+          "label": { "type": "string" },
+          "date": { "type": "string" },
+          "source": {
+            "type": "object",
+            "required": ["label", "url"],
+            "properties": {
+              "label": { "type": "string" },
+              "url": { "type": "string", "format": "uri" }
+            },
+            "additionalProperties": false
+          },
+          "changes": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": false
+      }
+    },
     "source": {
       "type": "object",
       "required": ["label", "url", "sourceType"],
@@ -74,11 +104,6 @@
         "sourceType": { "const": "Primary" }
       },
       "additionalProperties": false
-    }
-  },
-  "$defs": {
-    "exposureLevel": {
-      "enum": ["Low", "Medium", "Elevated", "High", "Variable", "Constrained"]
     }
   },
   "additionalProperties": false

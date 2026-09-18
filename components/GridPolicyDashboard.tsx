@@ -2,24 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { buildDeterministicMemo } from "@/lib/analysis";
-import type {
-  ExposureLevel,
-  MarketProfile,
-  PolicyRecord,
-} from "@/lib/types";
+import { validateClaimBindings } from "@/lib/validation";
+import type { MarketProfile, PolicyRecord } from "@/lib/types";
 
 type Props = {
   policies: PolicyRecord[];
   markets: MarketProfile[];
 };
-
-function ExposurePill({ level }: { level: ExposureLevel }) {
-  return (
-    <span className={`pill pill-${level.toLowerCase()}`}>
-      {level}
-    </span>
-  );
-}
 
 function formatDate(value?: string) {
   if (!value) return "Not specified";
@@ -81,7 +70,14 @@ export function GridPolicyDashboard({ policies, markets }: Props) {
   const actionCount = policies.filter(
     (policy) => !["Monitor", "No action"].includes(policy.recommendedAction)
   ).length;
-  const pendingCount = policies.filter((policy) => policy.status === "Pending").length;
+  const openCount = policies.filter((policy) =>
+    ["Pending", "Open proceeding"].includes(policy.status)
+  ).length;
+
+  const claimBindings = useMemo(
+    () => (selected ? validateClaimBindings(selected) : []),
+    [selected]
+  );
 
   async function generateMemo() {
     if (!selected) return;
@@ -109,7 +105,26 @@ export function GridPolicyDashboard({ policies, markets }: Props) {
     }
   }
 
+  function downloadMemo() {
+    if (!selected) return;
+    const text = memoText || buildDeterministicMemo(selected);
+    const blob = new Blob(
+      [
+        `GRIDPOLICY LEADERSHIP MEMO\n${selected.title}\n${selected.jurisdiction}\n\n${text}\n\nPRIMARY SOURCE\n${selected.source.label}\n${selected.source.url}\n`,
+      ],
+      { type: "text/plain;charset=utf-8" }
+    );
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `gridpolicy-${selected.id}-memo.txt`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
   if (!selected) return null;
+
+  const versions = selected.versionHistory ?? [];
 
   return (
     <main>
@@ -119,7 +134,7 @@ export function GridPolicyDashboard({ policies, markets }: Props) {
           <h1>GridPolicy</h1>
           <p className="subtitle">
             Source-grounded policy intelligence translated into power, cost,
-            interconnection, siting, sustainability, and development exposure.
+            interconnection, siting, sustainability, and development implications.
           </p>
         </div>
         <div className="review-badge">
@@ -137,17 +152,17 @@ export function GridPolicyDashboard({ policies, markets }: Props) {
         <div className="card kpi">
           <span>State markets</span>
           <strong>{markets.length}</strong>
-          <small>Comparative view</small>
+          <small>Comparative factual view</small>
         </div>
         <div className="card kpi">
-          <span>Action required</span>
+          <span>Action workflow</span>
           <strong>{actionCount}</strong>
           <small>Engage / analyze / escalate</small>
         </div>
         <div className="card kpi">
-          <span>Pending proceedings</span>
-          <strong>{pendingCount}</strong>
-          <small>Track for decision changes</small>
+          <span>Open / pending</span>
+          <strong>{openCount}</strong>
+          <small>Proceedings requiring monitoring</small>
         </div>
       </section>
 
@@ -155,11 +170,11 @@ export function GridPolicyDashboard({ policies, markets }: Props) {
         <div className="section-heading">
           <div>
             <div className="eyebrow">MARKET COMPARISON</div>
-            <h2>Infrastructure policy exposure</h2>
+            <h2>Tracked policy conditions</h2>
           </div>
           <p>
-            Indicators describe business exposure in the tracked record. They
-            are not rankings of policy quality.
+            The table describes the effect of the tracked source record. It does
+            not rank jurisdictions or rate policy quality.
           </p>
         </div>
         <div className="table-wrap">
@@ -167,27 +182,27 @@ export function GridPolicyDashboard({ policies, markets }: Props) {
             <thead>
               <tr>
                 <th>Market</th>
-                <th>Power</th>
-                <th>Interconnection</th>
-                <th>Tariff</th>
-                <th>DC policy</th>
-                <th>Clean energy</th>
-                <th>Overall exposure</th>
+                <th>Tracked development</th>
+                <th>Status</th>
+                <th>Power signal</th>
+                <th>Interconnection signal</th>
+                <th>Tariff / cost signal</th>
+                <th>Clean-energy signal</th>
               </tr>
             </thead>
             <tbody>
               {markets.map((market) => (
-                <tr key={market.market} title={market.basis}>
+                <tr key={market.market}>
                   <td>
                     <strong>{market.market}</strong>
-                    <span className="row-note">{market.basis}</span>
+                    <span className="row-note">{market.sourceBasis}</span>
                   </td>
-                  <td><ExposurePill level={market.powerAvailability} /></td>
-                  <td><ExposurePill level={market.interconnection} /></td>
-                  <td><ExposurePill level={market.tariffRisk} /></td>
-                  <td><span className="plain-badge">{market.dataCenterPolicy}</span></td>
-                  <td><ExposurePill level={market.cleanEnergy} /></td>
-                  <td><ExposurePill level={market.overallExposure} /></td>
+                  <td>{market.trackedDevelopment}</td>
+                  <td><span className="plain-badge">{market.currentStatus}</span></td>
+                  <td>{market.powerSignal}</td>
+                  <td>{market.interconnectionSignal}</td>
+                  <td>{market.tariffCostSignal}</td>
+                  <td>{market.cleanEnergySignal}</td>
                 </tr>
               ))}
             </tbody>
@@ -282,22 +297,25 @@ export function GridPolicyDashboard({ policies, markets }: Props) {
               </article>
             </div>
 
-            <div className="exposure-grid">
-              {[
-                ["Power availability", selected.exposure.powerAvailability],
-                ["Utility cost", selected.exposure.utilityCost],
-                ["Interconnection", selected.exposure.interconnectionTimeline],
-                ["Site selection", selected.exposure.siteSelection],
-                ["Renewables", selected.exposure.renewableRequirements],
-                ["CapEx", selected.exposure.capex],
-                ["OpEx", selected.exposure.opex],
-                ["Regulatory uncertainty", selected.exposure.regulatoryUncertainty],
-              ].map(([label, value]) => (
-                <div key={label}>
-                  <span>{label}</span>
-                  <ExposurePill level={value as ExposureLevel} />
-                </div>
-              ))}
+            <div className="impact-panel">
+              <h3>Business-impact analysis</h3>
+              <div className="impact-grid">
+                {[
+                  ["Power availability", selected.businessImpact.powerAvailability],
+                  ["Utility cost", selected.businessImpact.utilityCost],
+                  ["Interconnection timeline", selected.businessImpact.interconnectionTimeline],
+                  ["Site selection", selected.businessImpact.siteSelection],
+                  ["Renewable / clean energy", selected.businessImpact.renewableRequirements],
+                  ["CapEx", selected.businessImpact.capex],
+                  ["OpEx", selected.businessImpact.opex],
+                  ["Regulatory uncertainty", selected.businessImpact.regulatoryUncertainty],
+                ].map(([label, value]) => (
+                  <div className="impact-item" key={label}>
+                    <span>{label}</span>
+                    <p>{value}</p>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="cross-functional">
@@ -327,6 +345,61 @@ export function GridPolicyDashboard({ policies, markets }: Props) {
             </div>
           </section>
 
+          {versions.length >= 2 && (
+            <section className="card detail-card">
+              <div className="section-heading">
+                <div>
+                  <div className="eyebrow">POLICY VERSION COMPARISON</div>
+                  <h2>What changed between versions</h2>
+                </div>
+                <p>Comparison is limited to retained primary-source records.</p>
+              </div>
+              <div className="version-grid">
+                {versions.map((version) => (
+                  <article className="version-card" key={`${version.label}-${version.date}`}>
+                    <span>{formatDate(version.date)}</span>
+                    <h3>{version.label}</h3>
+                    <ul>
+                      {version.changes.map((change) => <li key={change}>{change}</li>)}
+                    </ul>
+                    <a href={version.source.url} target="_blank" rel="noreferrer">
+                      {version.source.label} ↗
+                    </a>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <section className="card detail-card">
+            <div className="section-heading">
+              <div>
+                <div className="eyebrow">CLAIM-LEVEL SOURCE CONTROL</div>
+                <h2>Citation binding check</h2>
+              </div>
+              <p>
+                This verifies that each structured claim is linked to a retained
+                primary-source record. It does not replace factual human review.
+              </p>
+            </div>
+            <div className="claim-list">
+              {claimBindings.map((claim) => (
+                <article className="claim-row" key={claim.claimId}>
+                  <div>
+                    <strong>{claim.text}</strong>
+                    <span>{claim.sourceLabel}</span>
+                  </div>
+                  <div className="claim-actions">
+                    <span className={claim.status.startsWith("Bound") ? "check-ok" : "check-review"}>
+                      {claim.status}
+                    </span>
+                    <a href={claim.sourceUrl} target="_blank" rel="noreferrer">Source ↗</a>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
           <section className="card ai-card">
             <div className="ai-heading">
               <div>
@@ -337,14 +410,20 @@ export function GridPolicyDashboard({ policies, markets }: Props) {
                   evidence. Human review remains mandatory.
                 </p>
               </div>
-              <button type="button" onClick={generateMemo} disabled={memoLoading}>
-                {memoLoading ? "Drafting..." : "Draft leadership memo"}
-              </button>
+              <div className="button-row">
+                <button type="button" onClick={generateMemo} disabled={memoLoading}>
+                  {memoLoading ? "Drafting..." : "Draft leadership memo"}
+                </button>
+                <button type="button" className="secondary-button" onClick={downloadMemo}>
+                  Download memo
+                </button>
+              </div>
             </div>
 
             <div className="guardrails">
               <span>Primary-source citation retained</span>
-              <span>Unsupported claims prohibited by prompt</span>
+              <span>Claim links checked</span>
+              <span>No policy ranking</span>
               <span>Human verification required</span>
             </div>
 
@@ -362,9 +441,9 @@ export function GridPolicyDashboard({ policies, markets }: Props) {
       </section>
 
       <footer>
-        Independent policy-intelligence prototype. Exposure indicators are
-        analytical workflow aids, not legal advice, investment advice, or
-        judgments about policy merits.
+        Independent policy-intelligence prototype. Business-impact descriptions
+        are workflow aids, not legal advice, investment advice, policy rankings,
+        or judgments about policy merits.
       </footer>
     </main>
   );

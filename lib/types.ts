@@ -1,17 +1,10 @@
-export type ExposureLevel =
-  | "Low"
-  | "Medium"
-  | "Elevated"
-  | "High"
-  | "Variable"
-  | "Constrained";
-
 export type PolicyStatus =
   | "Effective"
   | "Approved"
   | "Pending"
   | "Published"
-  | "Program intake paused";
+  | "Program intake paused"
+  | "Open proceeding";
 
 export type RecommendedAction =
   | "Monitor"
@@ -30,15 +23,32 @@ export type Team =
   | "Public Policy"
   | "Operations";
 
-export type Exposure = {
-  powerAvailability: ExposureLevel;
-  utilityCost: ExposureLevel;
-  interconnectionTimeline: ExposureLevel;
-  siteSelection: ExposureLevel;
-  renewableRequirements: ExposureLevel;
-  capex: ExposureLevel;
-  opex: ExposureLevel;
-  regulatoryUncertainty: ExposureLevel;
+export type BusinessImpact = {
+  powerAvailability: string;
+  utilityCost: string;
+  interconnectionTimeline: string;
+  siteSelection: string;
+  renewableRequirements: string;
+  capex: string;
+  opex: string;
+  regulatoryUncertainty: string;
+};
+
+export type PolicyClaim = {
+  id: string;
+  text: string;
+  sourceLabel: string;
+  sourceUrl: string;
+};
+
+export type PolicyVersion = {
+  label: string;
+  date: string;
+  source: {
+    label: string;
+    url: string;
+  };
+  changes: string[];
 };
 
 export type PolicyRecord = {
@@ -53,7 +63,7 @@ export type PolicyRecord = {
   issueAreas: string[];
   summary: string;
   whyItMatters: string;
-  exposure: Exposure;
+  businessImpact: BusinessImpact;
   teams: Team[];
   recommendedAction: RecommendedAction;
   owner: Team;
@@ -61,6 +71,8 @@ export type PolicyRecord = {
   sourceConfidence: "High" | "Medium";
   lastReviewed: string;
   evidence: string[];
+  claims: PolicyClaim[];
+  versionHistory?: PolicyVersion[];
   source: {
     label: string;
     url: string;
@@ -71,11 +83,11 @@ export type PolicyRecord = {
 
 export type MarketProfile = {
   market: string;
-  powerAvailability: ExposureLevel;
-  interconnection: ExposureLevel;
-  tariffRisk: ExposureLevel;
-  dataCenterPolicy: "Active" | "Emerging" | "General framework";
-  cleanEnergy: ExposureLevel;
-  overallExposure: ExposureLevel;
-  basis: string;
+  trackedDevelopment: string;
+  currentStatus: string;
+  powerSignal: string;
+  interconnectionSignal: string;
+  tariffCostSignal: string;
+  cleanEnergySignal: string;
+  sourceBasis: string;
 };
