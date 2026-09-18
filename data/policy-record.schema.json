@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GridPolicy Policy Record",
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "jurisdiction",
+    "policyType",
+    "status",
+    "agency",
+    "summary",
+    "whyItMatters",
+    "exposure",
+    "teams",
+    "recommendedAction",
+    "owner",
+    "source",
+    "sourceConfidence",
+    "lastReviewed"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "title": { "type": "string" },
+    "jurisdiction": { "type": "string" },
+    "region": { "type": "string" },
+    "policyType": { "type": "string" },
+    "status": { "type": "string" },
+    "effectiveDate": { "type": "string" },
+    "agency": { "type": "string" },
+    "issueAreas": { "type": "array", "items": { "type": "string" } },
+    "summary": { "type": "string" },
+    "whyItMatters": { "type": "string" },
+    "exposure": {
+      "type": "object",
+      "required": [
+        "powerAvailability",
+        "utilityCost",
+        "interconnectionTimeline",
+        "siteSelection",
+        "renewableRequirements",
+        "capex",
+        "opex",
+        "regulatoryUncertainty"
+      ],
+      "properties": {
+        "powerAvailability": { "$ref": "#/$defs/exposureLevel" },
+        "utilityCost": { "$ref": "#/$defs/exposureLevel" },
+        "interconnectionTimeline": { "$ref": "#/$defs/exposureLevel" },
+        "siteSelection": { "$ref": "#/$defs/exposureLevel" },
+        "renewableRequirements": { "$ref": "#/$defs/exposureLevel" },
+        "capex": { "$ref": "#/$defs/exposureLevel" },
+        "opex": { "$ref": "#/$defs/exposureLevel" },
+        "regulatoryUncertainty": { "$ref": "#/$defs/exposureLevel" }
+      },
+      "additionalProperties": false
+    },
+    "teams": { "type": "array", "items": { "type": "string" } },
+    "recommendedAction": {
+      "enum": ["Monitor", "Engage", "Analyze", "Escalate", "No action"]
+    },
+    "owner": { "type": "string" },
+    "dueDate": { "type": "string" },
+    "sourceConfidence": { "enum": ["High", "Medium"] },
+    "lastReviewed": { "type": "string" },
+    "evidence": { "type": "array", "items": { "type": "string" } },
+    "source": {
+      "type": "object",
+      "required": ["label", "url", "sourceType"],
+      "properties": {
+        "label": { "type": "string" },
+        "url": { "type": "string", "format": "uri" },
+        "publishedDate": { "type": "string" },
+        "sourceType": { "const": "Primary" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "exposureLevel": {
+      "enum": ["Low", "Medium", "Elevated", "High", "Variable", "Constrained"]
+    }
+  },
+  "additionalProperties": false
+}
